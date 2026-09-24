@@ -40,3 +40,24 @@ def get_experiments():
     """
     with duckdb.connect(DB_PATH, read_only=True) as con:
         return con.execute(sql).df()["experiment_number"].tolist()
+
+def get_experiment_summary(experiment, country=None):
+    conditions, params = ["experiment_number = ?"], [experiment]
+    if country is not None:
+        conditions.append("country = ?")
+        params.append(country)
+
+    sql = f"""
+        SELECT
+            MIN(date_day) AS date_from,
+            MAX(date_day) AS date_to,
+            COUNT(DISTINCT country) AS countries,
+            COUNT(DISTINCT bucket) AS buckets,
+            COUNT(DISTINCT experiment_group) AS groups,
+            SUM(total_unique_users) AS user_days
+        FROM {MART_TABLE}
+        WHERE {' AND '.join(conditions)}
+          AND bucket IS NOT NULL
+    """
+    with duckdb.connect(DB_PATH, read_only=True) as con:
+        return con.execute(sql, params).df().iloc[0].to_dict()

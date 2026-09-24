@@ -1,7 +1,7 @@
 from fastapi.responses import FileResponse
 
 from fastapi import FastAPI, Query
-from database import load_buckets, get_countries, get_experiments
+from database import load_buckets, get_countries, get_experiments, get_experiment_summary
 from analytics import run
 
 app = FastAPI(title="Bucky A/B Dashboard")
@@ -18,6 +18,13 @@ def countries(experiment: str):
 @app.get("/api/experiments")
 def experiments():
     return get_experiments()
+
+@app.get("/api/summary")
+def summary(experiment: str, country: str | None = None):
+    result = get_experiment_summary(experiment, country)
+    result["date_from"] = str(result["date_from"])
+    result["date_to"] = str(result["date_to"])
+    return result
 
 @app.get("/api/results")
 def get_results(experiment: str, country: str | None = None, min_tstat: float = 0):

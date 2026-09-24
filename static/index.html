@@ -25,7 +25,7 @@
 </label>
 
 <label>Country:
-    <select id="country" onchange="loadResults()">
+    <select id="country" onchange="countryChanged()">
         <option value="">All</option>
     </select>
 </label>
@@ -35,6 +35,8 @@
 </label>
 
 <button onclick="loadResults()">Run</button>
+
+<div id="summary"></div>
 
 <table>
     <thead>
@@ -57,6 +59,24 @@
 </table>
 
 <script>
+async function loadSummary() {
+    const experiment = document.getElementById("experiment").value;
+    const country = document.getElementById("country").value;
+
+    let url = `/api/summary?experiment=${encodeURIComponent(experiment)}`;
+    if (country) url += `&country=${encodeURIComponent(country)}`;
+
+    const response = await fetch(url);
+    const s = await response.json();
+
+    document.getElementById("summary").innerHTML = `
+        <b>${s.date_from}</b> — <b>${s.date_to}</b>
+        &nbsp; | &nbsp; Countries: <b>${s.countries}</b>
+        &nbsp; | &nbsp; Groups: <b>${s.groups}</b>
+        &nbsp; | &nbsp; Buckets: <b>${s.buckets}</b>
+        &nbsp; | &nbsp; User-days: <b>${number(s.user_days)}</b>
+    `;
+}
 
 function number(x, digits = 0) {
     return x == null ? "" : Number(x).toLocaleString("en-US", {minimumFractionDigits: digits, maximumFractionDigits: digits}).replaceAll(",", " ");
@@ -96,6 +116,12 @@ async function loadExperiments() {
 
 async function experimentChanged() {
     await loadCountries();
+    await loadSummary();
+    await loadResults();
+}
+
+async function countryChanged() {
+    await loadSummary();
     await loadResults();
 }
 
@@ -139,6 +165,7 @@ async function loadResults() {
 async function init() {
     await loadExperiments();
     await loadCountries();
+    await loadSummary();
     await loadResults();
 }
 
