@@ -1,0 +1,13 @@
+version: 2
+
+models:
+  - name: stg_event_log
+    description: "Очищенные логи событий с распарсенными экспериментами"
+    columns:
+      - name: user_id
+        tests:
+          - not_null
+
+      - name: bucket
+        tests:
+          - not_null
