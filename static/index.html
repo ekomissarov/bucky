@@ -9,19 +9,25 @@
         th, td { border: 1px solid #ddd; padding: 8px; text-align: right; }
         th:first-child, td:first-child { text-align: left; }
         th { background: #f3f3f3; }
-        .positive { background: #d8f3dc; }
-        .negative { background: #ffd6d6; }
+        .positive { background: #90ff90; }
+        .positive-strong { background: green; color: white; }
+        .negative { background: #ff9090; }
+        .negative-strong { background: red; color: white; }
     </style>
 </head>
 <body>
 <h2>Bucky A/B Dashboard</h2>
 
 <label>Experiment:
-    <input id="experiment" value="num01">
+    <select id="experiment" onchange="experimentChanged()">
+
+    </select>
 </label>
 
 <label>Country:
-    <input id="country" placeholder="All">
+    <select id="country" onchange="loadResults()">
+        <option value="">All</option>
+    </select>
 </label>
 
 <label>|t-stat| ≥
@@ -32,21 +38,67 @@
 
 <table>
     <thead>
-        <tr>
-            <th>Metric</th>
-            <th>Control</th>
-            <th>Treatment</th>
-            <th>Effect %</th>
-            <th>t-stat</th>
-            <th>MDE %</th>
-            <th>CI low</th>
-            <th>CI high</th>
-        </tr>
+    <tr>
+        <th>Metric</th>
+        <th>Control</th>
+        <th>Treatment</th>
+        <th>Metric control</th>
+        <th>Metric treatment</th>
+        <th>User-days control</th>
+        <th>User-days treatment</th>
+        <th>Effect %</th>
+        <th>t-stat</th>
+        <th>MDE %</th>
+        <th>CI low</th>
+        <th>CI high</th>
+    </tr>
     </thead>
     <tbody id="results"></tbody>
 </table>
 
 <script>
+
+function number(x, digits = 0) {
+    return x == null ? "" : Number(x).toLocaleString("en-US", {minimumFractionDigits: digits, maximumFractionDigits: digits}).replaceAll(",", " ");
+}
+
+function decimal(x, digits = 3) {
+    return x == null ? "" : Number(x).toFixed(digits);
+}
+
+async function loadCountries() {
+    const experiment = document.getElementById("experiment").value;
+    const response = await fetch(`/api/countries?experiment=${encodeURIComponent(experiment)}`);
+    const countries = await response.json();
+    const select = document.getElementById("country");
+
+    select.innerHTML = '<option value="">All</option>';
+    for (const country of countries) {
+        const option = document.createElement("option");
+        option.value = country;
+        option.textContent = country;
+        select.appendChild(option);
+    }
+}
+async function loadExperiments() {
+    const response = await fetch("/api/experiments");
+    const experiments = await response.json();
+    const select = document.getElementById("experiment");
+
+    select.innerHTML = "";
+    for (const experiment of experiments) {
+        const option = document.createElement("option");
+        option.value = experiment;
+        option.textContent = experiment;
+        select.appendChild(option);
+    }
+}
+
+async function experimentChanged() {
+    await loadCountries();
+    await loadResults();
+}
+
 async function loadResults() {
     const experiment = document.getElementById("experiment").value;
     const country = document.getElementById("country").value;
@@ -62,23 +114,35 @@ async function loadResults() {
 
     for (const row of data) {
         const tr = document.createElement("tr");
-        const effectClass = row.effect_size_pct > 0 ? "positive" : row.effect_size_pct < 0 ? "negative" : "";
+        const strong = Math.abs(row.effect_size_pct) >= row.monitoring_mde_pct;
+        const effectClass = row.tstat_obs >= 3 ? (strong ? "positive-strong" : "positive")
+                          : row.tstat_obs <= -3 ? (strong ? "negative-strong" : "negative") : "";
 
         tr.innerHTML = `
             <td>${row.metric}</td>
             <td>${row.control}</td>
             <td>${row.treatment}</td>
-            <td class="${effectClass}">${row.effect_size_pct.toFixed(3)}</td>
-            <td>${Math.abs(row.tstat_obs).toFixed(2)}</td>
-            <td>${row.monitoring_mde_pct.toFixed(3)}</td>
-            <td>${row.CI_low_effect.toFixed(3)}</td>
-            <td>${row.CI_high_effect.toFixed(3)}</td>
+            <td>${number(row.metric_control)}</td>
+            <td>${number(row.metric_treatment)}</td>
+            <td>${number(row.userday_control)}</td>
+            <td>${number(row.userday_treatment)}</td>
+            <td class="${effectClass}">${decimal(row.effect_size_pct)}</td>
+            <td>${decimal(Math.abs(row.tstat_obs), 2)}</td>
+            <td>${decimal(row.monitoring_mde_pct)}</td>
+            <td>${decimal(row.CI_low_effect)}</td>
+            <td>${decimal(row.CI_high_effect)}</td>
         `;
         tbody.appendChild(tr);
     }
 }
 
-loadResults();
+async function init() {
+    await loadExperiments();
+    await loadCountries();
+    await loadResults();
+}
+
+init();
 </script>
 </body>
 </html>
