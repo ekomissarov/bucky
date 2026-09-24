@@ -1,6 +1,6 @@
 from fastapi.responses import FileResponse
 
-from fastapi import FastAPI, Query
+from fastapi import FastAPI
 from database import load_buckets, get_countries, get_experiments, get_experiment_summary
 from analytics import run
 

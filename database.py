@@ -1,7 +1,8 @@
 import duckdb
 import pandas as pd
+from pathlib import Path
 
-DB_PATH = "/Users/eugenekomissarov/Documents/localsource/bucky/data/ab_events.duckdb"
+DB_PATH = Path(__file__).resolve().parent / "data" / "ab_events.duckdb"
 MART_TABLE = "fct_ab_buckets_daily"
 
 def load_buckets(experiment, country=None):

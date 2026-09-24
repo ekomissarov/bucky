@@ -1,9 +1,7 @@
 from __future__ import annotations
 import re
-from functools import partial
 from itertools import combinations
 from typing import Optional
-import duckdb
 import numpy as np
 import pandas as pd
 from scipy import stats
@@ -13,8 +11,6 @@ from scipy.stats import t
 # Settings
 # =============================================================================
 DEFAULT_ALPHA, DEFAULT_BETA = 0.003, 0.2
-DB_PATH = "/Users/eugenekomissarov/Documents/localsource/bucky/data/ab_events.duckdb"
-MART_TABLE, EXPERIMENT = "fct_ab_buckets_daily", "num01"
 COUNT_COLUMNS = ["total_events", "page_view_count", "watch_count", "add_to_cart_count", "purchase_count",
                  "u_page_view", "u_watch", "u_add_to_cart", "u_purchase"]
 RETENTION_METRIC = re.compile(r"d\d+_retention")
