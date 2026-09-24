@@ -29,7 +29,6 @@ build/
 
 # Project specific
 data/
-models/
 
 # macOS
 .DS_Store
