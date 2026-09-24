@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Bucky A/B Dashboard</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 30px; }
+        table { border-collapse: collapse; margin-top: 20px; width: 100%; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: right; }
+        th:first-child, td:first-child { text-align: left; }
+        th { background: #f3f3f3; }
+        .positive { background: #d8f3dc; }
+        .negative { background: #ffd6d6; }
+    </style>
+</head>
+<body>
+<h2>Bucky A/B Dashboard</h2>
+
+<label>Experiment:
+    <input id="experiment" value="num01">
+</label>
+
+<label>Country:
+    <input id="country" placeholder="All">
+</label>
+
+<label>|t-stat| ≥
+    <input id="minTstat" type="number" value="0" step="0.1">
+</label>
+
+<button onclick="loadResults()">Run</button>
+
+<table>
+    <thead>
+        <tr>
+            <th>Metric</th>
+            <th>Control</th>
+            <th>Treatment</th>
+            <th>Effect %</th>
+            <th>t-stat</th>
+            <th>MDE %</th>
+            <th>CI low</th>
+            <th>CI high</th>
+        </tr>
+    </thead>
+    <tbody id="results"></tbody>
+</table>
+
+<script>
+async function loadResults() {
+    const experiment = document.getElementById("experiment").value;
+    const country = document.getElementById("country").value;
+    const minTstat = document.getElementById("minTstat").value;
+
+    let url = `/api/results?experiment=${encodeURIComponent(experiment)}&min_tstat=${minTstat}`;
+    if (country) url += `&country=${encodeURIComponent(country)}`;
+
+    const response = await fetch(url);
+    const data = await response.json();
+    const tbody = document.getElementById("results");
+    tbody.innerHTML = "";
+
+    for (const row of data) {
+        const tr = document.createElement("tr");
+        const effectClass = row.effect_size_pct > 0 ? "positive" : row.effect_size_pct < 0 ? "negative" : "";
+
+        tr.innerHTML = `
+            <td>${row.metric}</td>
+            <td>${row.control}</td>
+            <td>${row.treatment}</td>
+            <td class="${effectClass}">${row.effect_size_pct.toFixed(3)}</td>
+            <td>${Math.abs(row.tstat_obs).toFixed(2)}</td>
+            <td>${row.monitoring_mde_pct.toFixed(3)}</td>
+            <td>${row.CI_low_effect.toFixed(3)}</td>
+            <td>${row.CI_high_effect.toFixed(3)}</td>
+        `;
+        tbody.appendChild(tr);
+    }
+}
+
+loadResults();
+</script>
+</body>
+</html>
