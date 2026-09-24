@@ -1,0 +1,37 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# Virtual Environment
+.venv/
+venv/
+ENV/
+env/
+
+# PyCharm
+.idea/
+
+# Conda
+*.egg-info/
+dist/
+build/
+
+# PyCharm support libs
+*-pycharm-support-libs/
+
+# PyCharm virtual documents (temporary IDE files)
+.virtual_documents/
+
+# Project specific
+data/
+models/
+
+# macOS
+.DS_Store
+cache/
+catboost_info/
