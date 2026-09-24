@@ -1,0 +1,8 @@
+version: 2
+
+sources:
+  - name: raw_data
+    database: ab_events  # или имя вашей БД в DuckDB
+    schema: main
+    tables:
+      - name: events

@@ -34,3 +34,5 @@ data/
 .DS_Store
 cache/
 catboost_info/
+
+logs/
